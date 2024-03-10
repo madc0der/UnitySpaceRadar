@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace radar
 {
-    [ExecuteAlways]
+    [ExecuteInEditMode]
     public class RadarController : MonoBehaviour
     {
         [Header("Tags to find enemies and friends")]
@@ -51,12 +51,14 @@ namespace radar
                 GameObject targetGo = targets[i];
                 Transform targetTransform = targetGo.transform;
                 //Perform projection to radar plane and cut off targets outside of radar range
-                if (ProjectAndCheckIfOutside(targetTransform, out Vector3 targetPositionInScanPlane))
+                Vector3 targetPositionInScanPlane;
+                if (ProjectAndCheckIfOutside(targetTransform, out targetPositionInScanPlane))
                 {
                     continue;
                 }
 
-                RadarTarget radarTarget = TargetsPool.Acquire(targetGo, isEnemies, out bool isNew);
+                bool isNew;
+                RadarTarget radarTarget = TargetsPool.Acquire(targetGo, isEnemies, out isNew);
                 if (isNew)
                 {
                     PostCreateTargetUI(radarTarget);
@@ -113,8 +115,10 @@ namespace radar
 
         private void UpdateTarget(RadarTarget target, Vector2 radarSize)
         {
-            Vector2 targetRadarSpace = radarSize *
-                new Vector2(target.projected.x, target.projected.y) / radarRange;
+            Vector2 targetRadarSpace = new Vector2(
+                target.projected.x * radarSize.x / radarRange, 
+                  target.projected.y * radarSize.y / radarRange
+            );
         
             target.pointRect.anchoredPosition = targetRadarSpace;
             //Mark inactive for next update to release inactive targets
@@ -145,6 +149,7 @@ namespace radar
             }
         }
 
+/*
         private void OnDrawGizmosSelected()
         {
             Vector3[] lines = new Vector3[]
@@ -167,6 +172,7 @@ namespace radar
             Gizmos.color = Color.cyan;
             Gizmos.DrawLineList(lines);
         }
+*/
 #endif
     }
 }
